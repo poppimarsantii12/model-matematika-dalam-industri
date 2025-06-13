@@ -31,7 +31,7 @@ with st.sidebar:
     Mengevaluasi keandalan sistem dan mengidentifikasi titik rawan kegagalan.
     """)
     st.divider()
-    st.caption("Teknik Informatika - Matematika Terapan | Universitas Pelita Bangsa")
+    st.caption("Matematika Terapan | Teknik Informatika - Universitas Pelita Bangsa")
 
 # --- TAB 1: OPTIMASI PRODUKSI ---
 def optimasi_produksi():
@@ -54,7 +54,7 @@ def optimasi_produksi():
             jam_kursi = st.number_input("Jam Kerja per Kursi", min_value=1.0, value=2.0, step=0.5)
             kayu_meja = st.number_input("Kayu untuk Meja (unit)", min_value=1.0, value=4.0, step=0.5)
             kayu_kursi = st.number_input("Kayu untuk Kursi (unit)", min_value=1.0, value=1.5, step=0.5)
-            total_jam = st.number_input("Total Jam Kerja Tersedia per Minggu", min_value=1, value=240, step=10)
+            total_jam = st.number_input("Total Jam Kerja Tim per Minggu", min_value=1, value=240, step=10)
             total_kayu = st.number_input("Total Kayu Jati Tersedia (unit)", min_value=1, value=120, step=10)
             
         with st.expander("Penjelasan Rumus Model: Linear Programming"):
@@ -68,9 +68,12 @@ def optimasi_produksi():
             - $x$ = Jumlah Meja
             - $y$ = Jumlah Kursi
             """)
+
+            # Rumus fungsi utama untuk menentukan keuntungan maksimal
             st.markdown("**Fungsi Tujuan (Maksimalkan Keuntungan):**")
             st.latex(r'''Z = (\text{Profit Meja} \cdot x) + (\text{Profit Kursi} \cdot y)''')
             
+            # Rumus fungsi kendala
             st.markdown("**Fungsi Kendala (Batasan Sumber Daya):**")
             st.latex(r'''1. \quad (\text{Jam Meja} \cdot x) + (\text{Jam Kursi} \cdot y) \le \text{Total Jam}''')
             st.latex(r'''2. \quad (\text{Kayu Meja} \cdot x) + (\text{Kayu Kursi} \cdot y) \le \text{Total Kayu}''')
@@ -132,7 +135,6 @@ def optimasi_produksi():
         
         with st.container(border=True):
             st.markdown("**Analisis Sumber Daya (Bottleneck):**")
-            # --- PERUBAHAN: Teks Analisis Diringkas ---
             if (total_jam - jam_terpakai) < 1 and (total_kayu - kayu_terpakai) < 1:
                  st.error("- **Kritis:** Kedua sumber daya (jam dan kayu) habis. Peningkatan kapasitas mutlak diperlukan.")
             elif (total_jam - jam_terpakai) < 1:
@@ -142,6 +144,7 @@ def optimasi_produksi():
             else:
                 st.info("- **Kapasitas Tersedia:** Sumber daya masih ada. Ada ruang untuk meningkatkan produksi jika permintaan meningkat.")
 
+        # Ini code untuk membuat grafiknya
         st.markdown("#### Visualisasi Daerah Produksi yang Layak")
         fig, ax = plt.subplots(figsize=(10, 5))
         
@@ -200,14 +203,24 @@ def model_persediaan():
         
         with st.expander("Penjelasan Rumus Model: Economic Order Quantity (EOQ)"):
             st.markdown("""
-            EOQ adalah model yang digunakan untuk menemukan kuantitas pesanan yang dapat meminimalkan total biaya persediaan. Model ini menyeimbangkan dua jenis biaya yang berlawanan:
-            - **Biaya Pemesanan (S):** Biaya yang dikeluarkan setiap kali memesan barang (misalnya, biaya pengiriman, administrasi). Semakin sering memesan, semakin tinggi biaya ini.
-            - **Biaya Penyimpanan (H):** Biaya untuk menyimpan barang di gudang (misalnya, sewa, asuransi, pendingin). Semakin banyak barang yang disimpan, semakin tinggi biaya ini.
-            - **Reorder Point (ROP):** Menentukan kapan harus memesan kembali untuk menghindari kehabisan stok, dengan mempertimbangkan waktu tunggu (lead time) dan stok pengaman.
+            **Variabel Utama:**
+            - **D (Permintaan Tahunan):** Total jumlah unit yang dibutuhkan selama satu tahun.
+            - **S (Biaya Pemesanan):** Biaya tetap yang dikeluarkan setiap kali melakukan pemesanan.
+            - **H (Biaya Penyimpanan):** Biaya untuk menyimpan satu unit barang selama satu tahun.
+            - **Q (Kuantitas Pesanan):** Jumlah unit yang dipesan setiap kali melakukan pemesanan.
+            - **TC (Total Biaya):** Penjumlahan dari total biaya pemesanan tahunan dan total biaya penyimpanan tahunan.
+            - **ROP (Reorder Point):** Titik stok di mana pemesanan baru harus dilakukan.
             """)
-            st.markdown("**Variabel:** $Q^*$ (EOQ), $D$ (Permintaan Tahunan), $S$ (Biaya Pesan), $H$ (Biaya Simpan)")
-            st.latex(r''' Q^* = \sqrt{\frac{2DS}{H}} \quad | \quad ROP = (D/360) \times \text{Lead Time} + \text{Safety Stock}''')
-        
+
+            # Rumus utama EOQ
+            st.markdown("**Rumus Utama:**")
+            st.latex(r''' Q^* = \sqrt{\frac{2DS}{H}} ''')
+
+            # Rumus Pendukung ROP dan TC
+            st.markdown("**Rumus Pendukung:**")
+            st.latex(r'''ROP = (\text{Permintaan Harian}) \times \text{Lead Time} + \text{Stok Pengaman}''')
+            st.latex(r''' TC = \left(\frac{D}{Q}\right)S + \left(\frac{Q}{2}\right)H ''')
+
         if H > 0 and D > 0:
             eoq = math.sqrt((2 * D * S) / H)
             frekuensi_pesanan = D / eoq if eoq > 0 else 0
@@ -219,7 +232,8 @@ def model_persediaan():
             siklus_pemesanan = 360 / frekuensi_pesanan if frekuensi_pesanan > 0 else 0
         else:
             eoq = 0; total_biaya = 0; rop = 0; siklus_pemesanan = 0
-            
+
+        # Proses Perhitungan EOQ, ROP, dan TC    
         with st.expander("Lihat Proses Perhitungan"):
             st.markdown(f"**1. Perhitungan EOQ ($Q^*$):**")
             st.latex(fr"Q^* = \sqrt{{\frac{{2 \times {D} \times {S}}}{{{H}}}}} = {eoq:.2f} \text{{ unit}}")
@@ -242,7 +256,6 @@ def model_persediaan():
 
         with st.container(border=True):
             st.markdown("**Analisis Kebijakan Persediaan:**")
-            # --- PERUBAHAN: Teks Analisis Diringkas ---
             if eoq > (D/4):
                 st.warning("- **Frekuensi Rendah:** Pesanan dalam jumlah besar tapi jarang. Ini hemat biaya pesan, tapi boros biaya simpan.")
             elif eoq < (D/12):
@@ -250,6 +263,7 @@ def model_persediaan():
             else:
                 st.success("- **Kebijakan Seimbang:** Kuantitas pesanan Anda menyeimbangkan biaya pesan dan biaya simpan dengan baik.")
         
+        # Ini code untuk membuat grafik visualisasi analisis biaya
         st.markdown("#### Visualisasi Analisis Biaya")
         q = np.linspace(max(1, eoq * 0.1), eoq * 2 if eoq > 0 else 200, 100)
         holding_costs = (q / 2) * H
@@ -273,7 +287,6 @@ def model_persediaan():
         ax.ticklabel_format(style='plain', axis='y')
         st.pyplot(fig)
 
-        # --- PENAMBAHAN: Penjelasan Grafik Analisis Biaya ---
         with st.container(border=True):
              st.markdown("**🔍 Penjelasan Grafik Analisis Biaya:**")
              st.markdown("""
@@ -284,6 +297,7 @@ def model_persediaan():
             - **Garis Ungu (EOQ):** Menandai titik di mana kurva total biaya mencapai titik terendahnya. Ini adalah kuantitas pesanan yang paling efisien.
             """)
 
+        # Ini code untuk membuat grafik visualisasi siklus persediaan
         st.markdown("#### Visualisasi Siklus Persediaan")
         fig2, ax2 = plt.subplots(figsize=(10, 5))
         if siklus_pemesanan > 0 and eoq > 0:
@@ -349,13 +363,15 @@ def model_antrian():
             - **Waktu Tunggu (W, Wq):** Berapa lama rata-rata pelanggan menghabiskan waktu di sistem atau di antrian?
             Model ini mengasumsikan kedatangan pelanggan dan waktu pelayanan mengikuti distribusi Poisson (acak).
             """)
+
+            # Rumus yang digunakan
             st.markdown("**Variabel:** $\lambda$ (Tingkat Kedatangan), $\mu$ (Tingkat Pelayanan)")
             st.latex(r''' \rho = \frac{\lambda}{\mu} \quad | \quad L = \frac{\rho}{1 - \rho} \quad | \quad W = \frac{L}{\lambda} ''')
             
         if mu <= lmbda:
             st.error("Tingkat pelayanan (μ) harus lebih besar dari tingkat kedatangan (λ) agar antrian stabil.")
             return
-
+        
         rho = lmbda / mu; L = rho / (1 - rho); Lq = (rho**2) / (1 - rho); W = L / lmbda; Wq = Lq / lmbda
         
         with st.expander("Lihat Proses Perhitungan"):
@@ -380,14 +396,14 @@ def model_antrian():
         
         with st.container(border=True):
             st.markdown("**Analisis Kinerja Sistem:**")
-            # --- PERUBAHAN: Teks Analisis Diringkas ---
             if rho > 0.85:
                 st.error(f"- **Kondisi Kritis ({rho:.1%}):** Tingkat kesibukan sangat tinggi. Waktu tunggu yang lama berisiko merusak reputasi.")
             elif rho > 0.7:
                 st.warning(f"- **Perlu Diwaspadai ({rho:.1%}):** Sistem cukup sibuk dan berisiko kewalahan jika ada lonjakan pelanggan.")
             else:
                 st.info(f"- **Kinerja Sehat ({rho:.1%}):** Sistem terkendali, namun mungkin ada kapasitas layanan yang belum termanfaatkan.")
-            
+
+        # Ini code untuk membuat grafik visualisasi kinerja antrian    
         st.markdown("#### Visualisasi Kinerja Antrian")
         
         fig1, ax1 = plt.subplots(figsize=(8, 4))
@@ -403,6 +419,7 @@ def model_antrian():
         ax1.set_title("Bagaimana Pelanggan Menghabiskan Waktunya?")
         st.pyplot(fig1)
 
+        # Ini code untuk membuat grafik visualisasi probabilitas panjang antrian
         st.markdown("#### Probabilitas Panjang Antrian")
         n_values = np.arange(0, 15)
         p_n_values = [(1 - rho) * (rho ** n) for n in n_values]
@@ -453,6 +470,8 @@ def model_keandalan_produksi():
             - **Keandalan (R):** Adalah probabilitas sebuah komponen atau sistem akan berfungsi dengan baik selama periode waktu tertentu.
             - **Sistem Seri:** Komponen-komponen yang tersusun berurutan. Jika salah satu saja gagal, maka seluruh sistem akan gagal. Akibatnya, keandalan sistem seri **selalu lebih rendah** daripada keandalan komponen terlemahnya.
             """)
+
+            # Rumus yang digunakan
             st.latex(r''' R_s = R_1 \times R_2 \times \dots \times R_n = \prod_{i=1}^{n} R_i ''')
 
         reliabilities = {'Stamping': r1, 'Welding': r2, 'Painting': r3, 'Assembly': r4}
@@ -471,14 +490,13 @@ def model_keandalan_produksi():
 
         col1_res, col2_res = st.columns(2)
         with col1_res:
-             st.metric(label="📉 Keandalan Keseluruhan Lini", value=f"{keandalan_sistem:.2%}")
+             st.metric(label="📈 Keandalan Keseluruhan Lini", value=f"{keandalan_sistem:.2%}")
         with col2_res:
-             st.metric(label="📈 Probabilitas Kegagalan Lini", value=f"{1 - keandalan_sistem:.2%}", delta_color="inverse")
+             st.metric(label="📉 Probabilitas Kegagalan Lini", value=f"{1 - keandalan_sistem:.2%}", delta_color="inverse")
 
         with st.container(border=True):
             st.markdown("**Analisis Dampak Kegagalan:**")
             dampak = (1 - keandalan_sistem) * 100
-            # --- PERUBAHAN: Teks Analisis Diringkas ---
             if dampak > 10:
                 st.error(f"- **Sangat Berisiko ({dampak:.1f}%):** Lini produksi kemungkinan besar akan sering berhenti, menyebabkan kerugian signifikan.")
             elif dampak > 5:
@@ -486,6 +504,7 @@ def model_keandalan_produksi():
             else:
                 st.info(f"- **Risiko Rendah ({dampak:.1f}%):** Probabilitas kegagalan terkendali. Fokus pada perawatan rutin untuk mempertahankan kinerja.")
 
+        # Ini code untuk membuat grafik visualisasi dampak keandalan komponen
         st.markdown("#### Visualisasi Dampak Keandalan Komponen")
         
         labels = list(reliabilities.keys())
